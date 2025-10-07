@@ -7,7 +7,11 @@ int my_strlen(char *str) {
      */
 
     // IMPLEMENT YOUR CODE HERE
-    return 0;
+    char *p=str; 
+    while(*p!='\0'){
+        p++;
+    }
+    return p-str;
 }
 
 
@@ -19,6 +23,17 @@ void my_strcat(char *str_1, char *str_2) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    char *p1=str_1;
+    char *p2=str_2;
+    while(*p1!='\0'){
+        p1++;
+    }
+    while(*p2!='\0'){
+        *p1=*p2;
+        p1++;
+        p2++;
+    }
+    *p1='\0';
 }
 
 
@@ -31,6 +46,45 @@ char* my_strstr(char *s, char *p) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+
+    // bool re=false;
+    // char *p1=p;
+    // char *s1=s;
+    // while(*s!='\0'){
+    //     if(*s==*p){
+    //         s1=s;
+    //         re=true;
+    //         while(*p!='\0'){
+    //             if(*s!=*p){
+    //                 re=false;
+    //                 break;
+    //             }
+    //             s++;
+    //             p++;
+    //         }
+    //     }
+    //     s++;
+    //     p=p1;
+    //     if(re){
+    //        break;
+    //     }
+    // }
+    // if(re){
+    //     return s1;
+    // }
+
+    for(char *start=s;*start!='0';start++){
+        char *s1=start;
+        char *p1=p;
+        while(*s1==*p1 && *p1!='\0'){
+            s1++;
+            p1++;
+        }
+        if(*p1=='\0'){
+            return start;
+        }
+    }
+
     return 0;
 }
 
@@ -97,6 +151,12 @@ void rgb2gray(float *in, float *out, int h, int w) {
 
     // IMPLEMENT YOUR CODE HERE
     // ...
+    for(int i=0;i<h;i++){
+        for(int j=0;j<w;j++){
+            int p=i*w+j;
+            out[p]=in[p*3]*0.2989f+in[p*3+1]*0.5870f+in[p*3+2]*0.1140;      //到底是哪不对啊 ai跑出来也是这个结果
+        }
+    }
 }
 
 // 练习5，实现图像处理算法 resize：缩小或放大图像
@@ -198,6 +258,50 @@ void resize(float *in, float *out, int h, int w, int c, float scale) {
 
     int new_h = h * scale, new_w = w * scale;
     // IMPLEMENT YOUR CODE HERE
+    for(int i=0;i<new_h;i++){
+        for(int j=0;j<new_w;j++){
+            float x0=j/scale;
+            float y0=i/scale;
+            int x1 = static_cast<int>(x0);
+            int y1 = static_cast<int>(y0);
+            int x2=x1+1;
+            int y2=y1+1;
+
+            if(x1<0){
+                x1=0;
+            }else if(x1>w-1){
+                x1=w-1;
+            }
+            if(x2<0){
+                x2=0;
+            }else if(x2>w-1){
+                x2=w-1;
+            }
+            if(y1<0){
+                y1=0;
+            }else if(y1>h-1){
+                y1=h-1;
+            }
+            if(y2<0){
+                y2=0;
+            }else if(y2>h-1){
+                y2=h-1;
+            }
+
+            float dx=x0-x1;
+            float dy=y0-y1;
+
+            for(int k=0;k<3;k++){               //这个参数c到底是什么东西:(
+                float p1=in[(y1*w+x1)*3+k];
+                float p2=in[(y1*w+x2)*3+k];
+                float p3=in[(y2*w+x1)*3+k];
+                float p4=in[(y2*w+x2)*3+k];
+
+                float pixel=p1*(1-dx)*(1-dy)+p2*dx*(1-dy)+p3*(1-dx)*dy+p4*dx*dy;
+                out[(i*new_w+j)*3+k]=pixel;
+            }
+        }
+    }
 
 }
 
@@ -221,4 +325,40 @@ void hist_eq(float *in, int h, int w) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    float count[256]={};
+    for(int i=0;i<h;i++){
+        for(int j=0;j<w;j++){
+            float color=in[i*w+j];
+            count[(int)color]++;
+        }
+    }
+
+    int N=h*w;
+    for(int i=0;i<256;i++){
+        count[i]/=N;
+    }
+
+    float s[256]={};
+    for(int i=0;i<256;i++){
+        for(int j=0;j<=i;j++){
+            s[i]+=count[j];
+        }
+    }
+
+    for(int i=0;i<256;i++){
+        s[i]*=255;
+        int temp=(int)s[i];
+        if(s[i]-temp>=0.5){
+            s[i]=temp+1;
+        }else{
+            s[i]=temp;
+        }
+    }
+
+    for(int i=0;i<h;i++){
+        for(int j=0;j<w;j++){
+            in[i*w+j]=s[(int)in[i*w+j]];
+        }
+    }
+
 }
